@@ -19,14 +19,6 @@ public class Hardware {
     public DcMotor driveLeftRear;
     public DcMotor driveRightRear;
 
-    public MotorGroup intake;
-
-    public DcMotor lift;
-    public DigitalChannel liftLeftLimit;
-    public DigitalChannel liftRightLimit;
-
-    public OpenCvWebcam webcam;
-
     public Hardware(HardwareMap hardwareMap) {
         imu = new RevIMU(hardwareMap);
 
@@ -34,20 +26,5 @@ public class Hardware {
         driveRightFront = hardwareMap.get(DcMotor.class, "driveRightFront");
         driveLeftRear = hardwareMap.get(DcMotor.class, "driveLeftRear");
         driveRightRear = hardwareMap.get(DcMotor.class, "driveRightRear");
-
-        intake = new MotorGroup(
-            new CRServo(hardwareMap, "intakeFront"),
-            new CRServo(hardwareMap, "intakeLeft"),
-            new CRServo(hardwareMap, "intakeRight")
-        );
-
-        lift = hardwareMap.get(DcMotor.class, "lift");
-        liftLeftLimit = hardwareMap.get(DigitalChannel.class, "liftLeftLimit");
-        liftRightLimit = hardwareMap.get(DigitalChannel.class, "liftRightLimit");
-
-        webcam = OpenCvCameraFactory.getInstance().createWebcam(
-            hardwareMap.get(WebcamName.class, "Webcam 1"),
-            R.id.cameraMonitorViewId
-        );
     }
 }
