@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.roadrunner.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.roadrunner.trajectorysequence.TrajectorySequence;
 
 /*
  * This is an example of a more complex path to really test the tuning.
@@ -25,14 +26,26 @@ public class SplineTest extends LinearOpMode {
                 .splineTo(new Vector2d(30, 30), 0)
                 .build();
 
-        drive.followTrajectory(traj);
+        TrajectorySequence traj2 = drive.trajectorySequenceBuilder(new Pose2d())
+                .splineToSplineHeading(new Pose2d(4, 0, Math.toRadians(0)), Math.toRadians(0))
+                .splineToSplineHeading(new Pose2d(4, 24, Math.toRadians(0)), Math.toRadians(0))
+                .splineToSplineHeading(new Pose2d(52, 24, Math.toRadians(-90)), Math.toRadians(0))
+                .splineToSplineHeading(new Pose2d(52, -24, Math.toRadians(-90)), Math.toRadians(0))
+                .splineToSplineHeading(new Pose2d(52, 24, Math.toRadians(-90)), Math.toRadians(0))
+                .splineToSplineHeading(new Pose2d(4, 24, Math.toRadians(0)), Math.toRadians(0))
+                .splineToSplineHeading(new Pose2d(4, 0, Math.toRadians(0)), Math.toRadians(0))
+                .splineToSplineHeading(new Pose2d(0, 0, Math.toRadians(0)), Math.toRadians(0))
 
-        sleep(2000);
+                .build();
 
-        drive.followTrajectory(
-                drive.trajectoryBuilder(traj.end(), true)
-                        .splineTo(new Vector2d(0, 0), Math.toRadians(180))
-                        .build()
-        );
+        drive.followTrajectorySequence(traj2);
+
+   //     sleep(2000);
+
+   //     drive.followTrajectory(
+    //            drive.trajectoryBuilder(traj.end(), true)
+    //                    .splineTo(new Vector2d(0, 0), Math.toRadians(180))
+     //                   .build()
+     //   );
     }
 }
