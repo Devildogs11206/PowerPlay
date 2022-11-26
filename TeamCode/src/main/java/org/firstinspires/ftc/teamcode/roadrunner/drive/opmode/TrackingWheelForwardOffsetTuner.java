@@ -33,8 +33,8 @@ import org.firstinspires.ftc.teamcode.roadrunner.drive.StandardTrackingWheelLoca
  * for the forward offset. You can run this procedure as many times as necessary until a
  * satisfactory result is produced.
  */
-//@Config
-//@Autonomous(group="drive")
+@Config
+@Autonomous(group="drive")
 public class TrackingWheelForwardOffsetTuner extends LinearOpMode {
     public static double ANGLE = 180; // deg
     public static int NUM_TRIALS = 5;

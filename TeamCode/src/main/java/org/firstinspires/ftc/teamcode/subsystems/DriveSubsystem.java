@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.Hardware;
 @Config
 public class DriveSubsystem extends HardwareSubsystem {
     public static double PULSE_PER_ROTATION = 537.7;
-    public static double DISTANCE_PER_ROTATION = 3.78 * Math.PI;
+    public static double DISTANCE_PER_ROTATION = 3.81414599 * Math.PI;
     public static double DISTANCE_PER_PULSE = DISTANCE_PER_ROTATION / PULSE_PER_ROTATION;
     public static double MIN_POWER = 0.2;
     public static double MAX_POWER = 1.0;
@@ -48,6 +48,7 @@ public class DriveSubsystem extends HardwareSubsystem {
         telemetry.addData("Drive (RF)","%.2f pow, %d pos, %.2f dist", hardware.driveRightFront.getPower(), hardware.driveRightFront.getCurrentPosition(), hardware.driveRightFront.getCurrentPosition() * DISTANCE_PER_PULSE);
         telemetry.addData("Drive (LR)","%.2f pow, %d pos, %.2f dist", hardware.driveLeftRear.getPower(), hardware.driveLeftRear.getCurrentPosition(), hardware.driveLeftRear.getCurrentPosition() * DISTANCE_PER_PULSE);
         telemetry.addData("Drive (RR)","%.2f pow, %d pos, %.2f dist", hardware.driveRightRear.getPower(), hardware.driveRightRear.getCurrentPosition(), hardware.driveRightRear.getCurrentPosition() * DISTANCE_PER_PULSE);
+        telemetry.update();
     }
 
     public enum DrivePower {
