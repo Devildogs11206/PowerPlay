@@ -43,6 +43,14 @@ public class MeepMeepTesting {
     }
 
     public static Pose2d[] getPoses(Pose2d start, Pose2d end){
+        Pose2d startTile = new Pose2d(
+            nearestTile(start.getX()),
+            nearestTile(start.getY())
+        );
         return new Pose2d[] {end};
+    }
+
+    public static double nearestTile(double value) {
+        return (Math.floor(value / TILE_WIDTH) + 0.5) * TILE_WIDTH;
     }
 }
