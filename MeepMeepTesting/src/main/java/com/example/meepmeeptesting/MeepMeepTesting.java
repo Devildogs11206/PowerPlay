@@ -17,9 +17,9 @@ public class MeepMeepTesting {
                 .setDimensions(12, 14)
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)
                 .followTrajectorySequence(drive -> {
-                    Pose2d start = new Pose2d(0, 0, 0);
-                    Pose2d end = getJunctionPose("Z2");
-                    Pose2d[] poses = getPoses(start, end);
+                    Pose2d start = getTilePose("A1");
+                    Pose2d end = getJunctionPose("V5");
+                    Pose2d[] poses = getPoses(start, end, false);
                     TrajectorySequenceBuilder builder = drive.trajectorySequenceBuilder(start);
                     Arrays.stream(poses).forEach(builder::lineToLinearHeading);
                     return builder.build();
@@ -35,22 +35,46 @@ public class MeepMeepTesting {
 
     public static double TILE_WIDTH = 23.062;
 
+    public static Pose2d getTilePose(String label){
+        return new Pose2d(
+            +(label.charAt(1) - (('3' + '4') / 2d)) * TILE_WIDTH,
+            -(label.charAt(0) - (('C' + 'D') / 2d)) * TILE_WIDTH
+        );
+    }
+
     public static Pose2d getJunctionPose(String label){
         return new Pose2d(
-            -('3'- label.charAt(1)) * TILE_WIDTH,
-            +('X'- label.charAt(0)) * TILE_WIDTH
+            +(label.charAt(1) - '3') * TILE_WIDTH,
+            -(label.charAt(0) - 'X') * TILE_WIDTH
         );
     }
 
-    public static Pose2d[] getPoses(Pose2d start, Pose2d end){
+    public static Pose2d[] getPoses(Pose2d start, Pose2d end, boolean y1st){
         Pose2d startTile = new Pose2d(
-            nearestTile(start.getX()),
-            nearestTile(start.getY())
+            nearestTile(start.getX(), 0.5),
+            nearestTile(start.getY(), 0.5)
         );
-        return new Pose2d[] {end};
+
+        Pose2d endTile = new Pose2d(
+            nearestTile(end.getX() - startTile.getX(), 0) + startTile.getX(),
+            nearestTile(end.getY() - startTile.getY(), 0) + startTile.getY()
+        );
+
+        Pose2d cornerTile = new Pose2d(
+                y1st ? startTile.getX() : endTile.getX(),
+                y1st ? endTile.getY() : startTile.getY()
+        );
+
+        end = new Pose2d(
+            end.getX(),
+            end.getY(),
+            Math.atan2(end.getY() - cornerTile.getY(), end.getX() - cornerTile.getX())
+        );
+
+        return new Pose2d[] {cornerTile, end};
     }
 
-    public static double nearestTile(double value) {
-        return (Math.floor(value / TILE_WIDTH) + 0.5) * TILE_WIDTH;
+    public static double nearestTile(double value, double offset) {
+        return (Math.floor(value / TILE_WIDTH) + offset) * TILE_WIDTH;
     }
 }
