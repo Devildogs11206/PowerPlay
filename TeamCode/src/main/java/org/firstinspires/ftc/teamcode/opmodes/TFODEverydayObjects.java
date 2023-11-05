@@ -27,47 +27,112 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.robotcontroller.external.samples;
+package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import java.util.List;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import com.qualcomm.robotcore.util.RobotLog;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.ArrayList;
 
 /**
- * This 2020-2021 OpMode illustrates the basics of using the TensorFlow Object Detection API to
- * determine the position of the Freight Frenzy game elements.
+ * This 2022-2023 OpMode illustrates the basics of using the TensorFlow Object Detection API to
+ * determine which image is being presented to the robot.
  *
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list.
+ * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list.
  *
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@TeleOp(name = "Concept: TensorFlow Object Detection Webcam", group = "Concept")
-public class ConceptTensorFlowObjectDetectionWebcam extends LinearOpMode {
-    /* Note: This sample uses the all-objects Tensor Flow model (FreightFrenzy_BCDM.tflite), which contains
-     * the following 4 detectable objects
-     *  0: Ball,
-     *  1: Cube,
-     *  2: Duck,
-     *  3: Marker (duck location tape marker)
-     *
-     *  Two additional model assets are available which only contain a subset of the objects:
-     *  FreightFrenzy_BC.tflite  0: Ball,  1: Cube
-     *  FreightFrenzy_DM.tflite  0: Duck,  1: Marker
+@TeleOp(name = "TFOD Everyday Objects", group = "Concept")
+//@Disabled
+public class TFODEverydayObjects extends LinearOpMode {
+    private static final String TFOD_MODEL_FILE = "/sdcard/FIRST/tflitemodels/detect.tflite";
+    private static final String TFOD_MODEL_LABELS = "/sdcard/FIRST/tflitemodels/labelmap.txt";
+    private String[] labels;
+    /*
+     * Specify the source for the Tensor Flow Model.
+     * If the TensorFlowLite object model is included in the Robot Controller App as an "asset",
+     * the OpMode must to load it using loadModelFromAsset().  However, if a team generated model
+     * has been downloaded to the Robot Controller's SD FLASH memory, it must to be loaded using loadModelFromFile()
+     * Here we assume it's an Asset.    Also see method initTfod() below .
      */
-    private static final String TFOD_MODEL_ASSET = "FreightFrenzy_BCDM.tflite";
+    /**
+     * Read the labels for the object detection model from a file.
+     */
+    private void readLabels() {
+        ArrayList<String> labelList = new ArrayList<>();
+
+        // try to read in the the labels.
+        try (BufferedReader br = new BufferedReader(new FileReader(TFOD_MODEL_LABELS))) {
+            int index = 0;
+            while (br.ready()) {
+                // skip the first row of the labelmap.txt file.
+                // if you look at the TFOD Android example project (https://github.com/tensorflow/examples/tree/master/lite/examples/object_detection/android)
+                // you will see that the labels for the inference model are actually extracted (as metadata) from the .tflite model file
+                // instead of from the labelmap.txt file. if you build and run that example project, you'll see that
+                // the label list begins with the label "person" and does not include the first line of the labelmap.txt file ("???").
+                // i suspect that the first line of the labelmap.txt file might be reserved for some future metadata schema
+                // (or that the generated label map file is incorrect).
+                // for now, skip the first line of the label map text file so that your label list is in sync with the embedded label list in the .tflite model.
+                if(index == 0) {
+                    // skip first line.
+                    br.readLine();
+                } else {
+                    labelList.add(br.readLine());
+                }
+                index++;
+            }
+        } catch (Exception e) {
+            telemetry.addData("Exception", e.getLocalizedMessage());
+            telemetry.update();
+        }
+
+        if (labelList.size() > 0) {
+            labels = getStringArray(labelList);
+            RobotLog.vv("readLabels()", "%d labels read.", labels.length);
+            for (String label : labels) {
+                RobotLog.vv("readLabels()", " " + label);
+            }
+        } else {
+            RobotLog.vv("readLabels()", "No labels read!");
+        }
+    }
+
+    // Function to convert ArrayList<String> to String[]
+    private String[] getStringArray(ArrayList<String> arr)
+    {
+        // declaration and initialize String Array
+        String str[] = new String[arr.size()];
+
+        // Convert ArrayList to object array
+        Object[] objArr = arr.toArray();
+
+        // Iterating and converting to String
+        int i = 0;
+        for (Object obj : objArr) {
+            str[i++] = (String)obj;
+        }
+
+        return str;
+    }
+
+    private static final String TFOD_MODEL_ASSET = "PowerPlay.tflite";
+    // private static final String TFOD_MODEL_FILE  = "/sdcard/FIRST/tflitemodels/CustomTeamModel.tflite";
+
     private static final String[] LABELS = {
-            "Ball",
-            "Cube",
-            "Duck",
-            "Marker"
+            "1 Bolt",
+            "2 Bulb",
+            "3 Panel"
     };
 
     /*
@@ -84,39 +149,22 @@ public class ConceptTensorFlowObjectDetectionWebcam extends LinearOpMode {
      */
     private static final String VUFORIA_KEY = "ARamgZ3/////AAABmb/8COrlYkzjkpr2MsKcDJpcbuv0xKXvLyTMSLb4kAcVeN8A560evWWup58hT12DOf5dGmaTtmR9OZaXZLgR41YJOte87AcvnY409wWEO3qp1y8iMpzVKDPZl6vXN+C9+8EnwojYg4ZcNsbCYQsu79Ghetb/Kji0CYUG/3HEvNkbd669uiL6zFWW+zllIh9x0ceLZLxKqIVGQGpamxt26UU8wYO2FqVoSo+DIZcofulZkv/MGNkAXdisHuclym2IjfW8yAEgLcJOgW2PKGNkLMj7lPYMNhK/5cpDM/zsTSW+SdPACaUzvmfK+h5iqreD569EpTk2P5tnZeo8e5hnbzWsA1CGGtvA5Z/ZhKjRjtqk";
 
-    /**
-     * {@link #vuforia} is the variable we will use to store our instance of the Vuforia
-     * localization engine.
-     */
     private VuforiaLocalizer vuforia;
 
-    /**
-     * {@link #tfod} is the variable we will use to store our instance of the TensorFlow Object
-     * Detection engine.
-     */
     private TFObjectDetector tfod;
 
     @Override
     public void runOpMode() {
+        readLabels();
         // The TFObjectDetector uses the camera frames from the VuforiaLocalizer, so we create that
         // first.
         initVuforia();
         initTfod();
 
-        /**
-         * Activate TensorFlow Object Detection before we wait for the start command.
-         * Do it here so that the Camera Stream window will have the TensorFlow annotations visible.
-         **/
         if (tfod != null) {
             tfod.activate();
 
-            // The TensorFlow software will scale the input images from the camera to a lower resolution.
-            // This can result in lower detection accuracy at longer distances (> 55cm or 22").
-            // If your target is at distance greater than 50 cm (20") you can adjust the magnification value
-            // to artificially zoom in to the center of image.  For best results, the "aspectRatio" argument
-            // should be set to the value of the images used to create the TensorFlow Object Detection model
-            // (typically 16/9).
-            tfod.setZoom(2.5, 16.0/9.0);
+            tfod.setZoom(1.0, 16.0/9.0);
         }
 
         /** Wait for the game to begin */
@@ -131,16 +179,20 @@ public class ConceptTensorFlowObjectDetectionWebcam extends LinearOpMode {
                     // the last time that call was made.
                     List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
                     if (updatedRecognitions != null) {
-                        telemetry.addData("# Object Detected", updatedRecognitions.size());
-                        // step through the list of recognitions and display boundary info.
-                        int i = 0;
+                        telemetry.addData("# Objects Detected", updatedRecognitions.size());
+
+                        // step through the list of recognitions and display image position/size information for each one
+                        // Note: "Image number" refers to the randomized image orientation/number
                         for (Recognition recognition : updatedRecognitions) {
-                            telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
-                            telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
-                                    recognition.getLeft(), recognition.getTop());
-                            telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
-                                    recognition.getRight(), recognition.getBottom());
-                            i++;
+                            double col = (recognition.getLeft() + recognition.getRight()) / 2 ;
+                            double row = (recognition.getTop()  + recognition.getBottom()) / 2 ;
+                            double width  = Math.abs(recognition.getRight() - recognition.getLeft()) ;
+                            double height = Math.abs(recognition.getTop()  - recognition.getBottom()) ;
+
+                            telemetry.addData(""," ");
+                            telemetry.addData("Image", "%s (%.0f %% Conf.)", recognition.getLabel(), recognition.getConfidence() * 100 );
+                            telemetry.addData("- Position (Row/Col)","%.0f / %.0f", row, col);
+                            telemetry.addData("- Size (Width/Height)","%.0f / %.0f", width, height);
                         }
                         telemetry.update();
                     }
@@ -159,12 +211,10 @@ public class ConceptTensorFlowObjectDetectionWebcam extends LinearOpMode {
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
 
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
-        parameters.cameraName = hardwareMap.get(WebcamName.class, "rearWebcam");
+        parameters.cameraDirection = CameraDirection.BACK;
 
         //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
-
-        // Loading trackables is not necessary for the TensorFlow Object Detection engine.
     }
 
     /**
@@ -174,10 +224,12 @@ public class ConceptTensorFlowObjectDetectionWebcam extends LinearOpMode {
         int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
                 "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
-        tfodParameters.minResultConfidence = 0.8f;
-        tfodParameters.isModelTensorFlow2 = true;
-        tfodParameters.inputSize = 320;
+        tfodParameters.minResultConfidence = 0.6f;
+        tfodParameters.isModelTensorFlow2 = false;
+        tfodParameters.inputSize = 300;
         tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
-        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABELS);
+        if (labels != null) {
+            tfod.loadModelFromFile(TFOD_MODEL_FILE, labels);
+        }
     }
 }
